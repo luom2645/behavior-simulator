@@ -1,6 +1,6 @@
 (function() {
     document.addEventListener('DOMContentLoaded', function() {
-        var indicator = document.createElement('div');
+        window.indicator = document.createElement('div'); // 将 indicator 挂载到 window 对象
         indicator.style.cssText = 'position: fixed; top: 10px; right: 10px; background: red; padding: 10px; color: white; z-index: 9999;';
         indicator.textContent = '脚本正在运行';
         document.body.appendChild(indicator);
