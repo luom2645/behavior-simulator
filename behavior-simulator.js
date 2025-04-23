@@ -24,6 +24,7 @@
         window.scrollBy(0, random(50, 100));
     }
 
+    // Ensure the clickRandomAd function is defined and accessible
     function clickRandomAd() {
         console.log("模拟点击广告行为");
         const ads = document.querySelectorAll('a[href*="ad"], a[href*="sponsored"], a[href*="promotion"]');
