@@ -153,12 +153,24 @@
         }
 
         function spoofScreenProperties() {
-            Object.defineProperty(window.screen, 'width', { get: () => random(1366, 1920) });
-            Object.defineProperty(window.screen, 'height', { get: () => random(768, 1080) });
-            Object.defineProperty(window.screen, 'availWidth', { get: () => random(1366, 1920) });
-            Object.defineProperty(window.screen, 'availHeight', { get: () => random(768, 1080) });
-            Object.defineProperty(window.screen, 'colorDepth', { get: () => 24 });
-            Object.defineProperty(window.screen, 'pixelDepth', { get: () => 24 });
+            try {
+                if (Object.getOwnPropertyDescriptor(window.screen, 'width')?.configurable) {
+                    Object.defineProperty(window.screen, 'width', { get: () => random(1366, 1920) });
+                } else {
+                    console.warn("window.screen.width 属性不可配置，跳过伪装");
+                }
+                if (Object.getOwnPropertyDescriptor(window.screen, 'height')?.configurable) {
+                    Object.defineProperty(window.screen, 'height', { get: () => random(768, 1080) });
+                } else {
+                    console.warn("window.screen.height 属性不可配置，跳过伪装");
+                }
+                Object.defineProperty(window.screen, 'availWidth', { get: () => random(1366, 1920) });
+                Object.defineProperty(window.screen, 'availHeight', { get: () => random(768, 1080) });
+                Object.defineProperty(window.screen, 'colorDepth', { get: () => 24 });
+                Object.defineProperty(window.screen, 'pixelDepth', { get: () => 24 });
+            } catch (e) {
+                console.warn("无法伪装 screen 属性: ", e.message);
+            }
         }
 
         function spoofWebGL() {
@@ -253,46 +265,41 @@
             Object.defineProperty(window, 'outerHeight', { get: () => window.innerHeight });
         }
 
-        function enhanceAntiDetection() {
-            const detectDevTools = () => {
-                const devToolsDetected = /./;
-                devToolsDetected.toString = () => {
-                    throw new Error("检测到开发者工具");
-                };
-                console.log(devToolsDetected);
-            };
-
-            setInterval(() => {
+        const randomBehavior = {
+            perform: async function() {
                 try {
-                    detectDevTools();
+                    const r = Math.random();
+                    let cumulativeProbability = 0;
+                    for (const behavior of behaviorProbabilities) {
+                        cumulativeProbability += behavior.probability;
+                        if (r < cumulativeProbability) {
+                            await randomDelay(config.minInterval / 2, config.maxInterval / 2);
+                            this[behavior.action]();
+                            break;
+                        }
+                    }
                 } catch (e) {
-                    console.warn("开发者工具已启用，停止脚本运行");
-                    stopAllAndHide();
+                    handleError(e, "随机行为执行");
                 }
-            }, 1000);
-
-            Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 5 });
-            Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 4 });
-            Object.defineProperty(navigator, 'deviceMemory', { get: () => 8 });
-            Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
-            Object.defineProperty(navigator, 'vendor', { get: () => 'Google Inc.' });
-
-            const originalLog = console.log;
-            console.log = function(...args) {
-                if (args.length && typeof args[0] === 'string' && args[0].includes('[检测]')) {
-                    return;
-                }
-                originalLog.apply(console, args);
-            };
-        }
-
-        spoofWindowProperties();
-        spoofHardwareProperties();
-        spoofNavigatorPlugins();
-        spoofScreenProperties();
-        spoofWebGL();
-        spoofCanvas();
-        interceptDialogs();
+            },
+            read: function() {
+                console.log("模拟阅读行为");
+                simulateScrollPause();
+            },
+            click: function() {
+                console.log("模拟点击行为");
+                clickRandomAd();
+            },
+            type: function() {
+                console.log("模拟键盘输入行为");
+                const input = document.querySelector('input, textarea');
+                if (input) simulateTyping(input, "测试输入");
+            },
+            scroll: function() {
+                console.log("模拟滚动行为");
+                simulateScrollPause();
+            }
+        };
 
         enhanceStealth();
 
@@ -358,8 +365,14 @@
             };
         }
 
-        enhanceAntiDetection();
         enhanceSimulation();
+
+        setInterval(() => {
+            if (!userActivityDetector.isUserActive()) {
+                console.log("未检测到用户行为，开始仿用户行为");
+                randomBehavior.perform();
+            }
+        }, 5000);
 
         window.onerror = function(msg, url, lineNo, columnNo, error) {
             if (config.debug) {
@@ -744,41 +757,12 @@
             }
         };
 
-        const randomBehavior = {
-            perform: async function() {
-                try {
-                    const r = Math.random();
-                    let cumulativeProbability = 0;
-                    for (const behavior of behaviorProbabilities) {
-                        cumulativeProbability += behavior.probability;
-                        if (r < cumulativeProbability) {
-                            await randomDelay(config.minInterval / 2, config.maxInterval / 2);
-                            this[behavior.action]();
-                            break;
-                        }
-                    }
-                } catch (e) {
-                    handleError(e, "随机行为执行");
-                }
-            },
-            read: function() {
-                console.log("模拟阅读行为");
-                simulateScrollPause();
-            },
-            click: function() {
-                console.log("模拟点击行为");
-                clickRandomAd();
-            },
-            type: function() {
-                console.log("模拟键盘输入行为");
-                const input = document.querySelector('input, textarea');
-                if (input) simulateTyping(input, "测试输入");
-            },
-            scroll: function() {
-                console.log("模拟滚动行为");
-                simulateScrollPause();
-            }
-        };
+        const behaviorProbabilities = [
+            { action: 'read', probability: 0.6 },
+            { action: 'click', probability: 0.08 },
+            { action: 'type', probability: 0.1 },
+            { action: 'scroll', probability: 0.22 }
+        ];
 
         function normalizeBehaviorProbabilities() {
             const totalProbability = behaviorProbabilities.reduce((sum, behavior) => sum + behavior.probability, 0);
@@ -790,228 +774,7 @@
             }
         }
 
-        function simulateMouseMovement(targetElement, useCurve = true) {
-            try {
-                if (!targetElement || !(targetElement instanceof HTMLElement)) {
-                    console.error("目标元素无效");
-                    return;
-                }
-                const rect = targetElement.getBoundingClientRect();
-                const startX = random(0, window.innerWidth);
-                const startY = random(0, window.innerHeight);
-                const endX = rect.left + rect.width / 2;
-                const endY = rect.top + rect.height / 2;
-                const steps = config.mouseMoveSteps;
-
-                let currentStep = 0;
-                const controlX = useCurve ? (startX + endX) / 2 + random(-50, 50) : null;
-                const controlY = useCurve ? (startY + endY) / 2 + random(-50, 50) : null;
-
-                const interval = setInterval(() => {
-                    try {
-                        if (currentStep >= steps) {
-                            clearInterval(interval);
-                            return;
-                        }
-                        const t = currentStep / steps;
-                        const x = useCurve
-                            ? (1 - t) * (1 - t) * startX + 2 * (1 - t) * t * controlX + t * t * endX
-                            : startX + t * (endX - startX);
-                        const y = useCurve
-                            ? (1 - t) * (1 - t) * startY + 2 * (1 - t) * t * controlY + t * t * endY
-                            : startY + t * (endY - startY);
-
-                        const event = new MouseEvent('mousemove', {
-                            clientX: x,
-                            clientY: y,
-                            bubbles: true,
-                            cancelable: true,
-                            view: window
-                        });
-                        document.dispatchEvent(event);
-                        currentStep++;
-                    } catch (e) {
-                        handleError(e, "鼠标移动模拟");
-                        clearInterval(interval);
-                    }
-                }, config.scrollStepInterval);
-            } catch (e) {
-                handleError(e, "模拟鼠标移动函数");
-            }
-        }
-
-        function animateMouseMovement(targetElement) {
-            simulateMouseMovement(targetElement, true);
-        }
-
-        function simulateScrollPause() {
-            const scrollHeight = document.body.scrollHeight;
-            const scrollPosition = window.scrollY + window.innerHeight;
-            if (scrollPosition < scrollHeight) {
-                const scrollAmount = random(50, 150) * (Math.random() > 0.5 ? 1 : -1);
-                window.scrollBy(0, scrollAmount);
-                logger.log("模拟滚动停顿");
-            }
-        }
-
-        function simulateHover(targetElement) {
-            if (!targetElement || !(targetElement instanceof HTMLElement)) {
-                console.error("目标元素无效");
-                return;
-            }
-            const event = new MouseEvent('mouseover', {
-                bubbles: true,
-                cancelable: true,
-                view: window
-            });
-            targetElement.dispatchEvent(event);
-            logger.log("模拟鼠标悬停: " + (targetElement.textContent || targetElement.className || '未知元素'));
-        }
-
-        function simulateTyping(targetElement, text) {
-            if (!targetElement || !(targetElement instanceof HTMLElement)) {
-                console.error("目标元素无效");
-                return;
-            }
-            let index = 0;
-            const interval = setInterval(() => {
-                if (index >= text.length) {
-                    clearInterval(interval);
-                    return;
-                }
-                const char = text[index];
-                const keyEvent = new KeyboardEvent('keydown', {
-                    key: char,
-                    code: `Key${char.toUpperCase()}`,
-                    bubbles: true,
-                    cancelable: true
-                });
-                targetElement.dispatchEvent(keyEvent);
-                targetElement.value += char;
-                index++;
-            }, random(100, 300));
-        }
-
-        function simulateRandomInteraction() {
-            const modals = document.querySelectorAll('.modal, .dialog, [role="dialog"]');
-            if (modals.length > 0 && Math.random() < 0.5) {
-                const modal = modals[Math.floor(Math.random() * modals.length)];
-                const isVisible = modal.style.display !== 'none';
-                modal.style.display = isVisible ? 'none' : 'block';
-                logger.log(`随机${isVisible ? '关闭' : '打开'}模态框`);
-            }
-        }
-
-        function clickRandomAd() {
-            var ads = document.querySelectorAll('.ad, .advertisement, [data-ad]');
-            if (ads.length === 0) {
-                logger.log("未找到广告元素");
-                return;
-            }
-
-            var randomAd = ads[Math.floor(Math.random() * ads.length)];
-            var rect = randomAd.getBoundingClientRect();
-            var x = rect.left + rect.width / 2;
-            var y = rect.top + rect.height / 2;
-
-            var clickEvent = new MouseEvent('click', {
-                bubbles: true,
-                cancelable: true,
-                view: window,
-                clientX: x,
-                clientY: y
-            });
-
-            logger.log("点击广告: " + (randomAd.textContent || randomAd.className || '广告元素'));
-            randomAd.dispatchEvent(clickEvent);
-        }
-
-        var userActivityDetector = {
-            lastActivityTime: Date.now(),
-            activityThreshold: 5000,
-
-            init: function() {
-                ['mousemove', 'keydown', 'scroll', 'click'].forEach(function(event) {
-                    window.addEventListener(event, function() {
-                        userActivityDetector.lastActivityTime = Date.now();
-                    });
-                });
-            },
-
-            isUserActive: function() {
-                return Date.now() - this.lastActivityTime < this.activityThreshold;
-            }
-        };
-
-        var taskScheduler = {
-            tasks: [],
-            maxTasks: 10,
-            interval: 1000,
-            running: false,
-
-            start: function() {
-                if (this.running) return;
-                this.running = true;
-
-                const executeTasks = () => {
-                    if (!this.running) return;
-
-                    const now = Date.now();
-                    this.tasks.forEach(task => {
-                        if (!task.lastRun || now - task.lastRun >= this.interval) {
-                            task.fn();
-                            task.lastRun = now;
-                        }
-                    });
-
-                    requestAnimationFrame(executeTasks);
-                };
-
-                requestAnimationFrame(executeTasks);
-            },
-
-            stop: function() {
-                this.running = false;
-            },
-
-            addTask: function(taskFn) {
-                if (this.tasks.length >= this.maxTasks) {
-                    console.warn("任务调度器已达到最大任务数量，无法添加新任务");
-                    return;
-                }
-                this.tasks.push({ fn: taskFn, lastRun: null });
-            }
-        };
-
-        taskScheduler.addTask(() => memoryManager.checkAndClean());
-        taskScheduler.addTask(() => behaviorSimulator.scheduleNextAction());
-        taskScheduler.start();
-
-        const behaviorProbabilities = [
-            { action: 'read', probability: 0.6 },
-            { action: 'click', probability: 0.08 },
-            { action: 'type', probability: 0.1 },
-            { action: 'scroll', probability: 0.22 }
-        ];
-
         normalizeBehaviorProbabilities();
-
-        randomBehavior.perform = async function() {
-            try {
-                const r = Math.random();
-                let cumulativeProbability = 0;
-                for (const behavior of behaviorProbabilities) {
-                    cumulativeProbability += behavior.probability;
-                    if (r < cumulativeProbability) {
-                        await randomDelay(config.minInterval / 2, config.maxInterval / 2);
-                        this[behavior.action]();
-                        break;
-                    }
-                }
-            } catch (e) {
-                handleError(e, "随机行为执行");
-            }
-        };
 
         function update() {
             console.log('Update frame');
