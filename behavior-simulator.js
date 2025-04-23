@@ -68,10 +68,25 @@
             Object.defineProperty(window, 'outerHeight', { get: () => window.innerHeight });
         }
 
-        // 模拟 navigator.hardwareConcurrency 和 navigator.deviceMemory
+        // 修改 spoofHardwareProperties 函数
         function spoofHardwareProperties() {
-            Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => random(2, 8) });
-            Object.defineProperty(navigator, 'deviceMemory', { get: () => random(4, 16) });
+            try {
+                Object.defineProperty(navigator, 'hardwareConcurrency', {
+                    get: () => random(2, 8),
+                    configurable: true // 确保属性可重新定义
+                });
+            } catch (e) {
+                console.warn("无法伪装 navigator.hardwareConcurrency: ", e.message);
+            }
+
+            try {
+                Object.defineProperty(navigator, 'deviceMemory', {
+                    get: () => random(4, 16),
+                    configurable: true
+                });
+            } catch (e) {
+                console.warn("无法伪装 navigator.deviceMemory: ", e.message);
+            }
         }
 
         // 伪装 navigator.plugins 和 navigator.mimeTypes
@@ -548,6 +563,38 @@
                 
                 var interval = random(config.minInterval, config.maxInterval);
                 this.currentTimer = setTimeout(randomBehavior.perform.bind(randomBehavior), interval);
+            }
+        };
+
+        // 定义 randomBehavior 对象
+        const randomBehavior = {
+            perform: function() {
+                const r = Math.random();
+                let cumulativeProbability = 0;
+                for (const behavior of behaviorProbabilities) {
+                    cumulativeProbability += behavior.probability;
+                    if (r < cumulativeProbability) {
+                        this[behavior.action]();
+                        break;
+                    }
+                }
+            },
+            read: function() {
+                console.log("模拟阅读行为");
+                simulateScrollPause();
+            },
+            click: function() {
+                console.log("模拟点击行为");
+                clickRandomAd();
+            },
+            type: function() {
+                console.log("模拟键盘输入行为");
+                const input = document.querySelector('input, textarea');
+                if (input) simulateTyping(input, "测试输入");
+            },
+            scroll: function() {
+                console.log("模拟滚动行为");
+                simulateScrollPause();
             }
         };
 
