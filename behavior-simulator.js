@@ -24,6 +24,18 @@
         window.scrollBy(0, random(50, 100));
     }
 
+    function clickRandomAd() {
+        console.log("模拟点击广告行为");
+        const ads = document.querySelectorAll('a[href*="ad"], a[href*="sponsored"], a[href*="promotion"]');
+        if (ads.length > 0) {
+            const randomAd = ads[Math.floor(Math.random() * ads.length)];
+            randomAd.click();
+            console.log("点击了广告: " + (randomAd.textContent || randomAd.href));
+        } else {
+            console.log("未找到广告链接");
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         var indicator = document.createElement('div');
         indicator.style.cssText = 'display: none; position: fixed; top: 10px; right: 10px; background: red; padding: 10px; color: white; z-index: 9999;';
@@ -852,7 +864,7 @@
         }
 
         function handleInactivityWhileReading() {
-            const readingCheckInterval = 5000; // 5秒无操作触发
+            const readingCheckInterval = 5000; // 将检测间隔减少到 5 秒
             setInterval(() => {
                 if (!userInteracted && document.visibilityState === 'visible') {
                     console.log("用户长时间未操作，可能正在阅读内容");
