@@ -291,6 +291,110 @@
     // 调用伪装更多细节属性
     spoofDetailedProperties();
 
+    // 模拟用户行为中断
+    async function simulateBehaviorInterruption() {
+        if (Math.random() < 0.3) { // 30% 概率中断行为
+            const interruptionDuration = random(5000, 15000); // 随机中断 5-15 秒
+            console.log(`模拟用户行为中断 ${interruptionDuration} 毫秒`);
+            await new Promise(resolve => setTimeout(resolve, interruptionDuration));
+        }
+    }
+
+    // 动态调整行为触发概率
+    function dynamicallyAdjustBehaviorProbabilities() {
+        const currentHour = new Date().getHours();
+        behaviorProbabilities.forEach(behavior => {
+            if (currentHour >= 22 || currentHour < 6) { // 夜间模式
+                if (behavior.action === 'click' || behavior.action === 'clickNonAd') {
+                    behavior.probability = 0.05; // 降低点击行为概率
+                } else if (behavior.action === 'read') {
+                    behavior.probability = 0.7; // 增加阅读行为概率
+                }
+            } else { // 白天模式
+                if (behavior.action === 'click' || behavior.action === 'clickNonAd') {
+                    behavior.probability = 0.1;
+                } else if (behavior.action === 'read') {
+                    behavior.probability = 0.6;
+                }
+            }
+        });
+        normalizeBehaviorProbabilities();
+    }
+
+    // 模拟更复杂的鼠标轨迹
+    function simulateComplexMousePath(targetElement) {
+        if (!targetElement || !(targetElement instanceof HTMLElement)) {
+            console.error("目标元素无效");
+            return;
+        }
+        const rect = targetElement.getBoundingClientRect();
+        const startX = random(0, window.innerWidth);
+        const startY = random(0, window.innerHeight);
+        const endX = rect.left + rect.width / 2;
+        const endY = rect.top + rect.height / 2;
+        const steps = random(30, 60); // 增加步数，模拟更复杂的轨迹
+        const controlX = (startX + endX) / 2 + random(-100, 100); // 贝塞尔曲线控制点
+        const controlY = (startY + endY) / 2 + random(-100, 100);
+
+        let currentStep = 0;
+        const interval = setInterval(() => {
+            if (currentStep >= steps) {
+                clearInterval(interval);
+                return;
+            }
+            const t = currentStep / steps;
+            const x = (1 - t) * (1 - t) * startX + 2 * (1 - t) * t * controlX + t * t * endX;
+            const y = (1 - t) * (1 - t) * startY + 2 * (1 - t) * t * controlY + t * t * endY;
+            const mouseMoveEvent = new MouseEvent('mousemove', {
+                clientX: x,
+                clientY: y,
+                bubbles: true,
+                cancelable: true
+            });
+            document.dispatchEvent(mouseMoveEvent);
+            currentStep++;
+        }, random(30, 50)); // 更短的间隔，模拟平滑移动
+    }
+
+    // 伪装更多复杂属性
+    function spoofComplexProperties() {
+        try {
+            Object.defineProperty(navigator, 'mediaDevices', {
+                get: () => ({
+                    getUserMedia: async () => ({ video: true, audio: true }),
+                    enumerateDevices: async () => [{ kind: 'videoinput' }, { kind: 'audioinput' }]
+                }),
+                configurable: true
+            });
+            Object.defineProperty(navigator, 'credentials', {
+                get: () => ({
+                    get: async () => null,
+                    store: async () => null
+                }),
+                configurable: true
+            });
+        } catch (e) {
+            console.warn("无法伪装复杂属性: ", e.message);
+        }
+    }
+
+    // 调用伪装复杂属性
+    spoofComplexProperties();
+
+    // 修改行为模拟器的 perform 方法，增加行为中断和动态概率调整
+    randomBehavior.perform = async function() {
+        try {
+            console.log("开始随机化行为执行");
+            await performRandomizedBehavior();
+            await simulateBehaviorInterruption(); // 在行为之间插入中断
+        } catch (e) {
+            handleError(e, "随机行为执行");
+        }
+    };
+
+    // 定期动态调整行为概率
+    setInterval(dynamicallyAdjustBehaviorProbabilities, 60000); // 每分钟调整一次
+
     // 修改行为模拟器的 perform 方法，增加长时间停顿和动态间隔
     randomBehavior.perform = async function() {
         try {
@@ -1222,5 +1326,91 @@
         document.addEventListener('DOMContentLoaded', () => {
             logTestResults();
         });
+
+        // 行为模式伪装模块
+        const behaviorPattern = {
+            actions: [],
+            maxActions: 100,
+
+            logAction: function(action) {
+                if (this.actions.length >= this.maxActions) {
+                    this.actions.shift(); // 移除最早的行为
+                }
+                this.actions.push({ action, timestamp: Date.now() });
+            },
+
+            simulateComplexBehavior: async function() {
+                const randomDelay = random(5000, 15000); // 随机延迟 5-15 秒
+                console.log(`模拟复杂行为，延迟 ${randomDelay} 毫秒`);
+                await new Promise(resolve => setTimeout(resolve, randomDelay));
+                this.logAction("complexBehavior");
+            }
+        };
+
+        // JavaScript 响应伪装模块
+        function spoofJavaScriptResponse() {
+            try {
+                const testElement = document.createElement('div');
+                testElement.style.cssText = 'position: absolute; top: 0; left: 0; width: 1px; height: 1px;';
+                document.body.appendChild(testElement);
+                const computedStyle = window.getComputedStyle(testElement);
+                if (computedStyle.position !== 'absolute') {
+                    console.warn("JavaScript 响应伪装失败");
+                } else {
+                    console.log("JavaScript 响应伪装成功");
+                }
+                document.body.removeChild(testElement);
+            } catch (e) {
+                console.warn("JavaScript 响应伪装失败: ", e.message);
+            }
+        }
+
+        // CAPTCHA 自动处理模块
+        async function handleCAPTCHA() {
+            console.warn("检测到 CAPTCHA 验证");
+            try {
+                // 尝试自动处理 CAPTCHA
+                const captchaElement = document.querySelector('iframe[src*="captcha"], div[class*="captcha"]');
+                if (captchaElement) {
+                    console.log("尝试自动处理 CAPTCHA");
+                    // 模拟点击或输入操作
+                    captchaElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    await new Promise(resolve => setTimeout(resolve, random(2000, 5000))); // 模拟用户观察时间
+                    const captchaButton = captchaElement.querySelector('button, input[type="submit"]');
+                    if (captchaButton) {
+                        captchaButton.click();
+                        console.log("已尝试提交 CAPTCHA");
+                    } else {
+                        console.warn("未找到 CAPTCHA 提交按钮");
+                    }
+                } else {
+                    console.warn("未检测到 CAPTCHA 元素");
+                    alert("请手动完成 CAPTCHA 验证以继续操作");
+                }
+            } catch (e) {
+                console.error("自动处理 CAPTCHA 失败: ", e.message);
+                alert("请手动完成 CAPTCHA 验证以继续操作");
+            }
+        }
+
+        // 集成 CAPTCHA 检测逻辑
+        setInterval(() => {
+            const captchaDetected = document.querySelector('iframe[src*="captcha"], div[class*="captcha"]');
+            if (captchaDetected) {
+                handleCAPTCHA();
+            }
+        }, 10000); // 每 10 秒检查一次 CAPTCHA
+
+        // 初始化伪装模块
+        document.addEventListener('DOMContentLoaded', () => {
+            spoofJavaScriptResponse();
+        });
+
+        // 在行为检测中集成 CAPTCHA 验证
+        setInterval(() => {
+            if (behaviorPattern.actions.length > 50) { // 如果行为记录过多，触发 CAPTCHA
+                handleCAPTCHA();
+            }
+        }, 60000); // 每分钟检查一次
     });
 })();
