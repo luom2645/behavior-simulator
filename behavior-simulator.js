@@ -7,12 +7,14 @@
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    // 确保 clickRandomAd 函数定义在文件顶部
-    function clickRandomAd() {
+    // 改进 clickRandomAd 函数，增加点击延迟和随机性
+    async function clickRandomAd() {
         console.log("模拟点击广告行为");
         const ads = document.querySelectorAll('a[href*="ad"], a[href*="sponsored"], a[href*="promotion"]');
         if (ads.length > 0) {
             const randomAd = ads[Math.floor(Math.random() * ads.length)];
+            const delay = random(1000, 3000); // 随机延迟
+            await new Promise(resolve => setTimeout(resolve, delay));
             randomAd.click();
             console.log("点击了广告: " + (randomAd.textContent || randomAd.href));
         } else {
@@ -39,10 +41,57 @@
         }
     };
 
-    // 确保 simulateScrollPause 函数定义在文件顶部
+    // 改进 simulateScrollPause 函数，模拟自然滚动行为
     function simulateScrollPause() {
         console.log("模拟滚动暂停行为");
-        window.scrollBy(0, random(50, 100));
+        const scrollDistance = random(50, 300); // 随机滚动距离
+        const scrollDuration = random(500, 1500); // 随机滚动持续时间
+        const steps = random(5, 15); // 随机步数
+        const stepSize = scrollDistance / steps;
+
+        let currentStep = 0;
+        const interval = setInterval(() => {
+            if (currentStep >= steps) {
+                clearInterval(interval);
+                return;
+            }
+            window.scrollBy(0, stepSize);
+            currentStep++;
+        }, scrollDuration / steps);
+    }
+
+    // 改进 simulateMouseMovement 函数，模拟更自然的鼠标移动
+    function simulateMouseMovement(targetElement) {
+        if (!targetElement || !(targetElement instanceof HTMLElement)) {
+            console.error("目标元素无效");
+            return;
+        }
+        const rect = targetElement.getBoundingClientRect();
+        const startX = random(0, window.innerWidth);
+        const startY = random(0, window.innerHeight);
+        const endX = rect.left + rect.width / 2;
+        const endY = rect.top + rect.height / 2;
+        const steps = random(10, 30); // 随机步数
+        const stepX = (endX - startX) / steps;
+        const stepY = (endY - startY) / steps;
+
+        let currentStep = 0;
+        const interval = setInterval(() => {
+            if (currentStep >= steps) {
+                clearInterval(interval);
+                return;
+            }
+            const x = startX + stepX * currentStep;
+            const y = startY + stepY * currentStep;
+            const mouseMoveEvent = new MouseEvent('mousemove', {
+                clientX: x,
+                clientY: y,
+                bubbles: true,
+                cancelable: true
+            });
+            document.dispatchEvent(mouseMoveEvent);
+            currentStep++;
+        }, random(50, 100)); // 随机间隔
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -148,15 +197,14 @@
             Object.defineProperty(window, 'outerHeight', { get: () => window.innerHeight });
         }
 
+        // 增强伪装属性，增加更多随机性
         function spoofHardwareProperties() {
             try {
                 if (Object.getOwnPropertyDescriptor(navigator, 'hardwareConcurrency')?.configurable) {
                     Object.defineProperty(navigator, 'hardwareConcurrency', {
-                        get: () => random(2, 8),
+                        get: () => random(4, 16), // 更高的随机范围
                         configurable: true
                     });
-                } else {
-                    console.warn("navigator.hardwareConcurrency 属性不可配置，跳过伪装");
                 }
             } catch (e) {
                 console.warn("无法伪装 navigator.hardwareConcurrency: ", e.message);
@@ -165,11 +213,9 @@
             try {
                 if (Object.getOwnPropertyDescriptor(navigator, 'deviceMemory')?.configurable) {
                     Object.defineProperty(navigator, 'deviceMemory', {
-                        get: () => random(4, 16),
+                        get: () => random(2, 8), // 更高的随机范围
                         configurable: true
                     });
-                } else {
-                    console.warn("navigator.deviceMemory 属性不可配置，跳过伪装");
                 }
             } catch (e) {
                 console.warn("无法伪装 navigator.deviceMemory: ", e.message);
