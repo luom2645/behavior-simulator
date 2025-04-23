@@ -97,14 +97,27 @@
             }
         }
 
-        // 伪装 navigator.plugins 和 navigator.mimeTypes
+        // 修改 spoofNavigatorPlugins 函数以检查属性是否可配置
         function spoofNavigatorPlugins() {
-            Object.defineProperty(navigator, 'plugins', {
-                get: () => [{ name: 'Chrome PDF Viewer' }, { name: 'Native Client' }]
-            });
-            Object.defineProperty(navigator, 'mimeTypes', {
-                get: () => [{ type: 'application/pdf' }, { type: 'application/x-nacl' }]
-            });
+            try {
+                if (Object.getOwnPropertyDescriptor(navigator, 'plugins')?.configurable) {
+                    Object.defineProperty(navigator, 'plugins', {
+                        get: () => [{ name: 'Chrome PDF Viewer' }, { name: 'Native Client' }]
+                    });
+                } else {
+                    console.warn("navigator.plugins 属性不可配置，跳过伪装");
+                }
+
+                if (Object.getOwnPropertyDescriptor(navigator, 'mimeTypes')?.configurable) {
+                    Object.defineProperty(navigator, 'mimeTypes', {
+                        get: () => [{ type: 'application/pdf' }, { type: 'application/x-nacl' }]
+                    });
+                } else {
+                    console.warn("navigator.mimeTypes 属性不可配置，跳过伪装");
+                }
+            } catch (e) {
+                console.warn("无法伪装 navigator.plugins 或 navigator.mimeTypes: ", e.message);
+            }
         }
 
         // 随机化 window.screen 属性
@@ -862,6 +875,13 @@
                 }
             }
         };
+
+        // 定义 update 函数以解决未定义错误
+        function update() {
+            // 可在此处添加需要在每帧更新的逻辑
+            console.log('Update frame');
+            requestAnimationFrame(update);
+        }
 
         // 初始化并启动
         if (typeof MouseEvent === 'undefined' || typeof KeyboardEvent === 'undefined') {
