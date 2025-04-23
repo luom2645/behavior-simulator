@@ -154,20 +154,24 @@
 
         function spoofScreenProperties() {
             try {
-                if (Object.getOwnPropertyDescriptor(window.screen, 'width')?.configurable) {
-                    Object.defineProperty(window.screen, 'width', { get: () => random(1366, 1920) });
-                } else {
-                    console.warn("window.screen.width 属性不可配置，跳过伪装");
-                }
-                if (Object.getOwnPropertyDescriptor(window.screen, 'height')?.configurable) {
-                    Object.defineProperty(window.screen, 'height', { get: () => random(768, 1080) });
-                } else {
-                    console.warn("window.screen.height 属性不可配置，跳过伪装");
-                }
-                Object.defineProperty(window.screen, 'availWidth', { get: () => random(1366, 1920) });
-                Object.defineProperty(window.screen, 'availHeight', { get: () => random(768, 1080) });
-                Object.defineProperty(window.screen, 'colorDepth', { get: () => 24 });
-                Object.defineProperty(window.screen, 'pixelDepth', { get: () => 24 });
+                const screenProperties = ['width', 'height', 'availWidth', 'availHeight', 'colorDepth', 'pixelDepth'];
+                const spoofValues = {
+                    width: () => random(1366, 1920),
+                    height: () => random(768, 1080),
+                    availWidth: () => random(1366, 1920),
+                    availHeight: () => random(768, 1080),
+                    colorDepth: () => 24,
+                    pixelDepth: () => 24
+                };
+
+                screenProperties.forEach(prop => {
+                    const descriptor = Object.getOwnPropertyDescriptor(window.screen, prop);
+                    if (descriptor && descriptor.configurable) {
+                        Object.defineProperty(window.screen, prop, { get: spoofValues[prop] });
+                    } else {
+                        console.warn(`window.screen.${prop} 属性不可配置，跳过伪装`);
+                    }
+                });
             } catch (e) {
                 console.warn("无法伪装 screen 属性: ", e.message);
             }
