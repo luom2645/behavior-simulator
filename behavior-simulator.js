@@ -141,6 +141,207 @@
         }, random(50, 100)); // 随机间隔
     }
 
+    // 改进鼠标移动轨迹，添加人性化曲线
+    function simulateHumanMousePath(targetElement) {
+        if (!targetElement) return;
+        
+        const rect = targetElement.getBoundingClientRect();
+        const startX = random(100, window.innerWidth - 100);
+        const startY = random(100, window.innerHeight - 100);
+        const endX = rect.left + rect.width / 2;
+        const endY = rect.top + rect.height / 2;
+        
+        // 生成贝塞尔曲线控制点
+        const cp1x = startX + random(-100, 100);
+        const cp1y = startY + random(-100, 100);
+        const cp2x = endX + random(-100, 100);
+        const cp2y = endY + random(-100, 100);
+        
+        let step = 0;
+        const steps = random(25, 45);  // 更自然的步数
+        const interval = setInterval(() => {
+            if (step >= steps) {
+                clearInterval(interval);
+                return;
+            }
+            
+            const t = step / steps;
+            const x = Math.pow(1-t, 3) * startX + 
+                     3 * Math.pow(1-t, 2) * t * cp1x +
+                     3 * (1-t) * Math.pow(t, 2) * cp2x +
+                     Math.pow(t, 3) * endX;
+                     
+            const y = Math.pow(1-t, 3) * startY +
+                     3 * Math.pow(1-t, 2) * t * cp1y +
+                     3 * (1-t) * Math.pow(t, 2) * cp2y +
+                     Math.pow(t, 3) * endY;
+            
+            // 添加微小抖动
+            const jitterX = x + random(-2, 2);
+            const jitterY = y + random(-2, 2);
+            
+            const event = new MouseEvent('mousemove', {
+                bubbles: true,
+                cancelable: true,
+                clientX: jitterX,
+                clientY: jitterY,
+                view: window
+            });
+            document.dispatchEvent(event);
+            step++;
+        }, random(10, 20));  // 更自然的移动速度
+    }
+
+    // 改进点击行为
+    async function improvedClickBehavior(element) {
+        if (!element) return;
+        
+        // 先移动鼠标
+        await simulateHumanMousePath(element);
+        
+        // 随机短暂停顿，模拟人类决策时间
+        await new Promise(r => setTimeout(r, random(300, 1200)));
+        
+        // 有小概率取消点击
+        if (Math.random() < 0.1) {
+            console.log("模拟用户改变主意，取消点击");
+            return;
+        }
+        
+        // 点击前的微小停顿
+        await new Promise(r => setTimeout(r, random(50, 150)));
+        
+        // 执行点击
+        element.click();
+        
+        // 点击后的随机行为
+        const postClickDelay = random(500, 2000);
+        await new Promise(r => setTimeout(r, postClickDelay));
+    }
+
+    // 改进的随机行为调度器
+    function improvedBehaviorScheduler() {
+        // 每个行为之间的间隔时间要更自然
+        const minInterval = random(30000, 60000); // 30-60秒
+        const maxInterval = random(120000, 180000); // 2-3分钟
+        
+        let lastActionTime = Date.now();
+        
+        return {
+            scheduleNext: function() {
+                const now = Date.now();
+                const timeSinceLastAction = now - lastActionTime;
+                
+                // 如果间隔太短，增加延迟
+                if (timeSinceLastAction < minInterval) {
+                    return random(minInterval - timeSinceLastAction, maxInterval);
+                }
+                
+                // 加入工作时间判断
+                const hour = new Date().getHours();
+                if (hour < 7 || hour > 23) {
+                    return random(300000, 600000); // 夜间降低活动频率
+                }
+                
+                lastActionTime = now;
+                return random(minInterval, maxInterval);
+            }
+        };
+    }
+
+    // 替换原有的随机延迟函数
+    function randomDelay(min, max) {
+        const baseDelay = random(min, max);
+        // 添加高斯噪声
+        const noise = Math.floor(random(-200, 200) * Math.random());
+        return Math.max(min, baseDelay + noise);
+    }
+
+    // 修改行为模拟器的 start 方法
+    behaviorSimulator.start = function() {
+        if (this.isRunning) return;
+        this.isRunning = true;
+        
+        timeController.start();
+        
+        // 立即开始第一次行为
+        this.performTimedBehavior();
+    };
+
+    // 修改时间配置
+    const timeConfig = {
+        totalVisitTime: random(18000, 24000),  // 总访问时间 18-24 秒
+        readingTime: 12000,                    // 阅读时间 12 秒
+        scrollTime: 4000,                      // 滚动时间 4 秒
+        interactionTime: 2000,                 // 交互时间 2 秒
+        minStayTime: 18000,                    // 最小停留时间 18 秒
+    };
+
+    // 修改行为执行方法
+    behaviorSimulator.performTimedBehavior = async function() {
+        if (!this.isRunning || !timeController.shouldContinue()) {
+            return;
+        }
+
+        const elapsedTime = timeController.getElapsedTime();
+        const totalTime = timeConfig.totalVisitTime;
+        
+        // 根据已过时间比例选择合适的行为
+        if (elapsedTime < totalTime * 0.7) {  // 前70%时间主要阅读
+            await blogReader.simulateReading();
+        } else if (elapsedTime < totalTime * 0.9) {  // 接下来20%时间主要滚动
+            await simulateNaturalScrolling().scroll();
+        } else {  // 最后10%时间可能进行交互
+            await performRandomizedBehavior();
+        }
+
+        // 根据剩余时间动态调整下一个行为的延迟
+        const remainingTime = totalTime - elapsedTime;
+        const delay = Math.min(random(1000, 2000), remainingTime / 2);
+        if (remainingTime > 0) {
+            setTimeout(() => this.performTimedBehavior(), delay);
+        }
+    };
+
+    // 添加定时行为执行方法
+    behaviorSimulator.performTimedBehavior = async function() {
+        if (!this.isRunning || !timeController.shouldContinue()) {
+            return;
+        }
+
+        const elapsedTime = timeController.getElapsedTime();
+        
+        // 根据已过时间选择合适的行为
+        if (elapsedTime < timeConfig.readingTime) {
+            // 前12秒主要阅读
+            await blogReader.simulateReading();
+        } else if (elapsedTime < timeConfig.readingTime + timeConfig.scrollTime) {
+            // 接下来5秒主要滚动
+            await simulateNaturalScrolling().scroll();
+        } else {
+            // 最后3秒可能进行交互
+            await performRandomizedBehavior();
+        }
+
+        // 安排下一个行为
+        const delay = random(1000, 2000);
+        setTimeout(() => this.performTimedBehavior(), delay);
+    };
+
+    // 修改随机行为执行方法
+    randomBehavior.perform = async function() {
+        try {
+            if (!timeController.shouldContinue()) {
+                return;
+            }
+
+            await simulateUserPause();
+            await performRandomizedBehavior();
+        } catch (e) {
+            handleError(e, "随机行为执行");
+        }
+    };
+
     // 增强伪装，增加更多属性
     function spoofAdditionalProperties() {
         try {
@@ -444,6 +645,36 @@
             mobileOptimization: true,
             contentFocused: true,
             debug: false
+        };
+
+        const timeController = {
+            startTime: 0,
+            timeoutId: null,
+
+            start: function() {
+                this.startTime = Date.now();
+                this.schedulePageExit();
+            },
+
+            schedulePageExit: function() {
+                if (this.timeoutId) {
+                    clearTimeout(this.timeoutId);
+                }
+                
+                // 在20秒后结束访问
+                this.timeoutId = setTimeout(() => {
+                    behaviorSimulator.stop();
+                    window.location.href = document.referrer || '/';
+                }, timeConfig.totalVisitTime);
+            },
+
+            getElapsedTime: function() {
+                return Date.now() - this.startTime;
+            },
+
+            shouldContinue: function() {
+                return this.getElapsedTime() < timeConfig.totalVisitTime;
+            }
         };
 
         if (!config.debug) {
@@ -1179,12 +1410,11 @@
         };
 
         const behaviorProbabilities = [
-            { action: 'read', probability: 0.6 },
-            { action: 'click', probability: 0.08 },
-            { action: 'type', probability: 0.1 },
-            { action: 'scroll', probability: 0.22 },
-            { action: 'hover', probability: 0.1 },
-            { action: 'clickNonAd', probability: 0.1 }
+            { action: 'read', probability: 0.6 },      // 主要是阅读
+            { action: 'scroll', probability: 0.25 },   // 适度滚动
+            { action: 'hover', probability: 0.1 },     // 少量悬停
+            { action: 'click', probability: 0.03 },    // 极少点击广告
+            { action: 'clickNonAd', probability: 0.02 }// 极少点击普通链接
         ];
 
         function normalizeBehaviorProbabilities() {
@@ -1198,6 +1428,132 @@
         }
 
         normalizeBehaviorProbabilities();
+
+        // 添加博客阅读行为分析器
+        const blogReader = {
+            readingSpeed: random(200, 400),  // 每分钟阅读字数
+            lastScrollPosition: 0,
+            isReading: false,
+            
+            // 分析文章内容
+            analyzeArticle: function() {
+                const article = document.querySelector('article, .post-content, .entry-content, .article');
+                if (!article) return null;
+                
+                const text = article.textContent;
+                const wordCount = text.split(/\s+/).length;
+                const readingTime = Math.ceil(wordCount / this.readingSpeed);
+                
+                return {
+                    wordCount,
+                    readingTime,
+                    article
+                };
+            },
+            
+            // 模拟真实阅读行为
+            simulateReading: async function() {
+                const articleInfo = this.analyzeArticle();
+                if (!articleInfo) return;
+                
+                this.isReading = true;
+                const { article, readingTime } = articleInfo;
+                
+                // 先滚动到文章开头
+                article.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                await new Promise(r => setTimeout(r, 1000));
+                
+                // 计算阅读速度相关的滚动
+                const totalHeight = article.offsetHeight;
+                const scrollSteps = Math.ceil(readingTime * 60 / 2); // 每2秒滚动一次
+                const scrollDistance = totalHeight / scrollSteps;
+                
+                for (let i = 0; i < scrollSteps; i++) {
+                    if (!this.isReading) break;
+                    
+                    // 随机停顿，模拟仔细阅读
+                    if (Math.random() < 0.2) {
+                        await new Promise(r => setTimeout(r, random(2000, 5000)));
+                    }
+                    
+                    // 缓慢滚动
+                    window.scrollBy({
+                        top: scrollDistance,
+                        behavior: 'smooth'
+                    });
+                    
+                    // 有30%概率返回上一处重新阅读
+                    if (Math.random() < 0.3) {
+                        await new Promise(r => setTimeout(r, 1000));
+                        window.scrollBy({
+                            top: -scrollDistance * random(0.3, 0.7),
+                            behavior: 'smooth'
+                        });
+                    }
+                    
+                    await new Promise(r => setTimeout(r, random(1500, 3000)));
+                }
+                
+                this.isReading = false;
+            }
+        };
+
+        // 改进滚动行为
+        function simulateNaturalScrolling() {
+            const scrollHeight = document.documentElement.scrollHeight;
+            const viewportHeight = window.innerHeight;
+            let currentPosition = window.pageYOffset;
+            
+            // 寻找兴趣点（标题、图片等）
+            const interestPoints = document.querySelectorAll('h1, h2, h3, img, blockquote');
+            const points = Array.from(interestPoints).map(el => el.getBoundingClientRect().top + window.pageYOffset);
+            
+            return {
+                scroll: async function() {
+                    // 找到下一个兴趣点
+                    const nextPoint = points.find(p => p > currentPosition + 100) || scrollHeight;
+                    const distance = nextPoint - currentPosition;
+                    
+                    // 分段平滑滚动
+                    const steps = Math.floor(random(10, 20));
+                    const stepSize = distance / steps;
+                    
+                    for (let i = 0; i < steps; i++) {
+                        if (Math.random() < 0.1) { // 10%概率停顿
+                            await new Promise(r => setTimeout(r, random(500, 2000)));
+                        }
+                        
+                        window.scrollBy({
+                            top: stepSize,
+                            behavior: 'smooth'
+                        });
+                        
+                        await new Promise(r => setTimeout(r, random(100, 300)));
+                    }
+                    
+                    currentPosition = window.pageYOffset;
+                }
+            };
+        }
+
+        // 修改行为模拟器的执行方法
+        randomBehavior.perform = async function() {
+            try {
+                // 优先执行阅读行为
+                if (Math.random() < 0.7) {
+                    await blogReader.simulateReading();
+                } else {
+                    await performRandomizedBehavior();
+                }
+                
+                // 长时间阅读后的休息
+                if (Math.random() < 0.3) {
+                    await simulateLongPause();
+                }
+            } catch (e) {
+                handleError(e, "博客阅读行为执行");
+            }
+        };
 
         function update() {
             console.log('Update frame');
