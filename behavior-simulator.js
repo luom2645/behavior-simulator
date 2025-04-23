@@ -10,74 +10,20 @@
                 document.body.appendChild(indicator);
                 clearInterval(checkBodyInterval);
             }
-        }, 200); // 优化：减少检查频率
+        }, 100);
 
-        // 定义 behaviorSimulator 和 memoryManager
-        const behaviorSimulator = {
-            start() {
-                console.log('行为模拟器已启动');
-                // 添加行为模拟逻辑
-            },
-            stop() {
-                console.log('行为模拟器已停止');
-                // 停止行为模拟逻辑
-            }
-        };
-
-        const memoryManager = {
-            cleanMemory() {
-                console.log('内存清理已执行');
-                // 添加内存清理逻辑
-            }
-        };
-
-        // 增强任务调度器：增加停止机制
-        function taskScheduler(callback, interval) {
-            let lastExecution = 0;
-            let running = true;
-
-            function loop(timestamp) {
-                if (!running) return;
-                if (timestamp - lastExecution >= interval) {
-                    callback();
-                    lastExecution = timestamp;
-                }
-                requestAnimationFrame(loop);
-            }
-
-            requestAnimationFrame(loop);
-
-            return () => {
-                running = false;
-            };
-        }
-
-        // 替换 setInterval 为可停止的 taskScheduler
-        const stopTask = taskScheduler(() => {
-            const now = new Date().toLocaleTimeString();
-            console.log('脚本运行中...', now);
-            indicator.textContent = '脚本运行中: ' + now;
-
-            // 检测开发者工具
-            try {
-                const devToolsDetected = /./;
-                devToolsDetected.toString = () => {
-                    throw new Error("检测到开发者工具");
-                };
-                console.log(devToolsDetected);
-            } catch (e) {
-                console.warn("开发者工具已启用，停止脚本运行");
-                stopAllAndHide();
-            }
-        }, 2000);
+        setInterval(function() {
+            console.log('脚本运行中...', new Date().toLocaleTimeString());
+            indicator.textContent = '脚本运行中: ' + new Date().toLocaleTimeString();
+        }, 1000);
 
         // 配置参数 - 轻量化设置
         var config = {
-            minInterval: 15000, // 优化：增加最小间隔
-            maxInterval: 30000, // 优化：增加最大间隔
-            mouseMoveSteps: 10, // 优化：减少鼠标移动步数
-            scrollStepSize: 100,
-            scrollStepInterval: 100,
+            minInterval: 10000,
+            maxInterval: 20000,
+            mouseMoveSteps: 15,
+            scrollStepSize: 80,
+            scrollStepInterval: 80,
             clickProbability: 0.08,
             readingProbability: 0.6,
             externalLinkProbability: 0.15,
@@ -88,15 +34,11 @@
             debug: false
         };
 
-        // 改进日志管理：使用条件性日志记录
-        const originalConsole = { ...console };
         if (!config.debug) {
-            console.log = console.info = console.warn = console.error = function() {};
-        } else {
-            console.log = originalConsole.log;
-            console.info = originalConsole.info;
-            console.warn = originalConsole.warn;
-            console.error = originalConsole.error;
+            console.log = function() {};
+            console.info = function() {};
+            console.warn = function() {};
+            console.error = function() {};
         }
 
         function randomDelay(min, max) {
@@ -125,48 +67,27 @@
             return true;
         }
 
-        // 增强异常处理逻辑
-        function handleError(error, context) {
-            console.error(`[错误] ${context}:`, error.message);
-        }
-
-        // 降级处理增强
         function applyFallbacks() {
             console.warn("启用降级模式，禁用部分功能");
 
             const noopProxy = new Proxy({}, { get: () => () => {} });
             Object.defineProperty(window, 'navigator', { value: noopProxy });
 
-            behaviorSimulator.start = function() {
+            randomBehavior.perform = function() {
                 console.warn("行为模拟被禁用");
             };
-            behaviorSimulator.stop = function() {
-                console.warn("行为模拟停止被禁用");
+
+            simulateMouseMovement = function() {
+                console.warn("鼠标移动模拟被禁用");
             };
-            memoryManager.cleanMemory = function() {
-                console.warn("内存清理被禁用");
+            simulateScrollPause = function() {
+                console.warn("滚动模拟被禁用");
             };
         }
 
         if (!checkBrowserCompatibility()) {
             applyFallbacks();
         }
-
-        // 增强伪装逻辑：增加对属性是否可配置的全面检查
-        function definePropertySafely(obj, prop, descriptor) {
-            try {
-                if (Object.getOwnPropertyDescriptor(obj, prop)?.configurable) {
-                    Object.defineProperty(obj, prop, descriptor);
-                } else {
-                    console.warn(`${prop} 属性不可配置，跳过伪装`);
-                }
-            } catch (e) {
-                console.warn(`无法伪装 ${prop}:`, e.message);
-            }
-        }
-
-        // 示例：伪装 navigator.webdriver
-        definePropertySafely(navigator, 'webdriver', { get: () => false });
 
         const spoofedNavigator = new Proxy(navigator, {
             get: (target, prop) => {
@@ -332,15 +253,37 @@
             Object.defineProperty(window, 'outerHeight', { get: () => window.innerHeight });
         }
 
-        function stopAllAndHide() {
-            behaviorSimulator.stop();
-            memoryManager.cleanMemory();
+        function enhanceAntiDetection() {
+            const detectDevTools = () => {
+                const devToolsDetected = /./;
+                devToolsDetected.toString = () => {
+                    throw new Error("检测到开发者工具");
+                };
+                console.log(devToolsDetected);
+            };
 
-            const indicator = document.querySelector('div[style*="z-index: 9999"]');
-            if (indicator) {
-                indicator.style.display = 'none';
-            }
-            console.log = console.info = console.warn = console.error = function() {};
+            setInterval(() => {
+                try {
+                    detectDevTools();
+                } catch (e) {
+                    console.warn("开发者工具已启用，停止脚本运行");
+                    stopAllAndHide();
+                }
+            }, 1000);
+
+            Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 5 });
+            Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 4 });
+            Object.defineProperty(navigator, 'deviceMemory', { get: () => 8 });
+            Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
+            Object.defineProperty(navigator, 'vendor', { get: () => 'Google Inc.' });
+
+            const originalLog = console.log;
+            console.log = function(...args) {
+                if (args.length && typeof args[0] === 'string' && args[0].includes('[检测]')) {
+                    return;
+                }
+                originalLog.apply(console, args);
+            };
         }
 
         spoofWindowProperties();
@@ -352,6 +295,776 @@
         interceptDialogs();
 
         enhanceStealth();
+
+        function enhanceSimulation() {
+            function simulateMouseClick(targetElement) {
+                if (!targetElement || !(targetElement instanceof HTMLElement)) {
+                    console.error("目标元素无效");
+                    return;
+                }
+                const rect = targetElement.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+
+                const clickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window,
+                    clientX: x,
+                    clientY: y
+                });
+                targetElement.dispatchEvent(clickEvent);
+                console.log("模拟点击: " + (targetElement.textContent || targetElement.className || '未知元素'));
+            }
+
+            function simulateKeyboardInput(targetElement, text) {
+                if (!targetElement || !(targetElement instanceof HTMLElement)) {
+                    console.error("目标元素无效");
+                    return;
+                }
+                let index = 0;
+                const interval = setInterval(() => {
+                    if (index >= text.length) {
+                        clearInterval(interval);
+                        return;
+                    }
+                    const char = text[index];
+                    const keyEvent = new KeyboardEvent('keydown', {
+                        key: char,
+                        code: `Key${char.toUpperCase()}`,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    targetElement.dispatchEvent(keyEvent);
+                    targetElement.value += char;
+                    index++;
+                }, random(100, 300));
+            }
+
+            randomBehavior.click = function() {
+                const links = document.querySelectorAll('a');
+                if (links.length > 0) {
+                    const randomLink = links[Math.floor(Math.random() * links.length)];
+                    simulateMouseClick(randomLink);
+                }
+            };
+
+            randomBehavior.type = function() {
+                const inputs = document.querySelectorAll('input, textarea');
+                if (inputs.length > 0) {
+                    const randomInput = inputs[Math.floor(Math.random() * inputs.length)];
+                    simulateKeyboardInput(randomInput, "测试输入");
+                }
+            };
+        }
+
+        enhanceAntiDetection();
+        enhanceSimulation();
+
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            if (config.debug) {
+                console.error('[博客行为] 错误:', msg, 'at', url, ':', lineNo);
+            }
+            return false;
+        };
+
+        const logger = {
+            log: function(message, level = 'info') {
+                if (config.debug) {
+                    console[level](`[日志] ${message}`);
+                }
+            }
+        };
+
+        function random(min, max) {
+            if (typeof min !== 'number' || typeof max !== 'number' || min > max) {
+                throw new Error("无效的随机数范围: min=" + min + ", max=" + max);
+            }
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function handleError(e, context) {
+            console.error(`[错误] ${context}: ${e.message}`);
+            if (config.debug) {
+                console.error(e.stack);
+            }
+        }
+
+        var deviceDetector = {
+            isMobile: function() {
+                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            },
+            
+            adjustForDevice: function() {
+                if (this.isMobile()) {
+                    config.mouseMoveSteps = 10;
+                    config.scrollStepSize = 70;
+                    config.minInterval = 12000;
+                    config.maxInterval = 22000;
+                    logger.log("检测到移动设备，已优化配置");
+                }
+            }
+        };
+
+        var browserAdapter = {
+            detectBrowser: function() {
+                var userAgent = navigator.userAgent.toLowerCase();
+                if (userAgent.indexOf('chrome') > -1) {
+                    return 'Chrome';
+                } else if (userAgent.indexOf('firefox') > -1) {
+                    return 'Firefox';
+                } else if (userAgent.indexOf('safari') > -1 && userAgent.indexOf('chrome') === -1) {
+                    return 'Safari';
+                } else if (userAgent.indexOf('edge') > -1) {
+                    return 'Edge';
+                } else if (userAgent.indexOf('trident') > -1 || userAgent.indexOf('msie') > -1) {
+                    return 'IE';
+                } else {
+                    return 'Other';
+                }
+            },
+
+            optimizeForBrowser: function() {
+                var browser = this.detectBrowser();
+                switch (browser) {
+                    case 'Chrome':
+                        logger.log("检测到 Chrome 浏览器，应用特定优化");
+                        break;
+                    case 'Firefox':
+                        logger.log("检测到 Firefox 浏览器，应用特定优化");
+                        break;
+                    case 'Safari':
+                        logger.log("检测到 Safari 浏览器，应用特定优化");
+                        break;
+                    case 'Edge':
+                        logger.log("检测到 Edge 浏览器，应用特定优化");
+                        break;
+                    case 'IE':
+                        logger.log("检测到 IE 浏览器，应用降级处理");
+                        config.enableLowMemoryMode = true;
+                        break;
+                    default:
+                        logger.log("检测到未知浏览器，使用默认设置");
+                }
+            },
+
+            detectPlatform: function() {
+                var platform = navigator.platform.toLowerCase();
+                if (platform.indexOf('win') > -1) {
+                    return 'Windows';
+                } else if (platform.indexOf('mac') > -1) {
+                    return 'MacOS';
+                } else if (platform.indexOf('linux') > -1) {
+                    return 'Linux';
+                } else if (/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(platform)) {
+                    return 'Mobile';
+                } else {
+                    return 'Other';
+                }
+            },
+
+            optimizeForPlatform: function() {
+                var platform = this.detectPlatform();
+                switch (platform) {
+                    case 'Windows':
+                        logger.log("检测到 Windows 平台，应用特定优化");
+                        break;
+                    case 'MacOS':
+                        logger.log("检测到 MacOS 平台，应用特定优化");
+                        break;
+                    case 'Linux':
+                        logger.log("检测到 Linux 平台，应用特定优化");
+                        break;
+                    case 'Mobile':
+                        logger.log("检测到移动平台，应用移动端优化");
+                        deviceDetector.adjustForDevice();
+                        break;
+                    default:
+                        logger.log("检测到未知平台，使用默认设置");
+                }
+            }
+        };
+
+        browserAdapter.optimizeForBrowser();
+        browserAdapter.optimizeForPlatform();
+
+        var memoryManager = {
+            lastCleanTime: Date.now(),
+            
+            cleanMemory: function() {
+                try {
+                    if (selectorCache) {
+                        selectorCache.clear();
+                    }
+                    
+                    if (behaviorSimulator) {
+                        behaviorSimulator.resetTempData();
+                    }
+                    
+                    this.cleanEventListeners();
+                    
+                    if (performance && performance.memory && 
+                        performance.memory.usedJSHeapSize > 100000000) {
+                        this.aggressiveClean();
+                    }
+                    
+                    if (typeof window.gc === 'function') {
+                        try {
+                            window.gc();
+                        } catch (e) {
+                            console.warn("垃圾回收失败: ", e.message);
+                        }
+                    }
+                    
+                    logger.log("执行内存清理操作");
+                    this.lastCleanTime = Date.now();
+                } catch (e) {
+                    logger.log("内存清理时发生错误: " + e.message);
+                }
+            },
+            
+            aggressiveClean: function() {
+                selectorCache.clear();
+                behaviorSimulator.resetTempData();
+                
+                this.cleanDOMReferences();
+                
+                logger.log("执行激进清理");
+            },
+            
+            cleanEventListeners: function() {
+                if (behaviorSimulator && behaviorSimulator.tempListeners) {
+                    behaviorSimulator.tempListeners.forEach(function(item) {
+                        if (item.element && item.type && item.handler) {
+                            item.element.removeEventListener(item.type, item.handler);
+                        }
+                    });
+                    behaviorSimulator.tempListeners = [];
+                }
+            },
+            
+            cleanDOMReferences: function() {
+                if (behaviorSimulator) {
+                    behaviorSimulator.currentElement = null;
+                }
+            },
+            
+            checkAndClean: function() {
+                var now = Date.now();
+                if (now - this.lastCleanTime > config.memoryCleanInterval) {
+                    this.cleanMemory();
+                    return true;
+                }
+                return false;
+            },
+            
+            setupScheduledCleaning: function() {
+                setInterval(this.cleanMemory.bind(this), config.memoryCleanInterval);
+                
+                document.addEventListener('visibilitychange', function() {
+                    if (document.hidden) {
+                        memoryManager.cleanMemory();
+                    }
+                });
+                
+                if ('memory' in performance) {
+                    setInterval(function() {
+                        if (performance.memory.usedJSHeapSize > 50000000) {
+                            memoryManager.cleanMemory();
+                        }
+                    }, 60000);
+                } else {
+                    logger.log("当前浏览器不支持内存监控功能，禁用相关功能");
+                    config.enableLowMemoryMode = false;
+                }
+            }
+        };
+
+        var selectorCache = {
+            data: {},
+            maxItems: 20,
+            
+            get: function(selector) {
+                if (this.data[selector]) {
+                    var cachedResult = this.data[selector];
+                    if (cachedResult.length > 0 && document.body.contains(cachedResult[0])) {
+                        return cachedResult;
+                    }
+                }
+                var result = document.querySelectorAll(selector);
+                this.data[selector] = result;
+                return result;
+            },
+            
+            clear: function() {
+                this.data = {};
+            }
+        };
+
+        var blogAnalyzer = {
+            analyzeContent: function() {
+                var contentSelectors = [
+                    'article', '.post-content', '.entry-content', 
+                    '.blog-post', '#content', '.content', 'main'
+                ];
+                
+                var content = null;
+                for (var i = 0; i < contentSelectors.length; i++) {
+                    var elements = document.querySelectorAll(contentSelectors[i]);
+                    if (elements.length > 0) {
+                        content = elements[0];
+                        break;
+                    }
+                }
+                
+                if (!content) return { wordCount: 500, readTime: 2 };
+                
+                var text = content.textContent || content.innerText;
+                var wordCount = text.split(/\s+/).length;
+                var readTimeMinutes = Math.max(1, Math.round(wordCount / 250));
+                
+                return {
+                    wordCount: wordCount,
+                    readTime: readTimeMinutes
+                };
+            },
+            
+            findReadingArea: function() {
+                var contentInfo = this.analyzeContent();
+                
+                if (contentInfo.wordCount > 1000) {
+                    config.scrollStepSize = 60;
+                    config.readingProbability = 0.7;
+                } else {
+                    config.scrollStepSize = 100;
+                }
+                
+                return contentInfo;
+            },
+            
+            findLinks: function() {
+                var container = document.querySelector('main') || document.body;
+                var allLinks = container.querySelectorAll('a[href]');
+                var internalLinks = [];
+                var externalLinks = [];
+
+                var currentDomain = window.location.hostname;
+
+                allLinks.forEach(function(link) {
+                    var href = link.href.toLowerCase();
+                    if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
+                        return;
+                    }
+
+                    if (href.includes(currentDomain)) {
+                        internalLinks.push(link);
+                    } else {
+                        externalLinks.push(link);
+                    }
+                });
+
+                return {
+                    internal: internalLinks,
+                    external: externalLinks
+                };
+            }
+        };
+
+        var behaviorSimulator = {
+            isRunning: false,
+            currentTimer: null,
+            lastAction: 0,
+            tempListeners: [],
+            
+            resetTempData: function() {
+                this.tempListeners = [];
+            },
+            
+            start: function() {
+                try {
+                    if (this.isRunning) return;
+                    this.isRunning = true;
+
+                    this.setupUserActivityDetection();
+                    this.setupDeviceAdjustments();
+                    this.setupMemoryManagement();
+                } catch (e) {
+                    handleError(e, "行为模拟器启动");
+                    this.isRunning = false;
+                }
+            },
+
+            setupUserActivityDetection: function() {
+                userActivityDetector.init();
+                setInterval(() => {
+                    if (userActivityDetector.isUserActive()) {
+                        logger.log("检测到用户行为，随机点击广告");
+                        clickRandomAd();
+                    } else {
+                        logger.log("未检测到用户行为，开始仿用户行为");
+                        randomBehavior.perform();
+                    }
+                }, 5000);
+            },
+
+            setupDeviceAdjustments: function() {
+                deviceDetector.adjustForDevice();
+            },
+
+            setupMemoryManagement: function() {
+                memoryManager.setupScheduledCleaning();
+            },
+            
+            stop: function() {
+                try {
+                    this.isRunning = false;
+                    if (this.currentTimer) {
+                        clearTimeout(this.currentTimer);
+                        this.currentTimer = null;
+                    }
+
+                    this.tempListeners.forEach(function(listener) {
+                        if (listener.type === 'interval') {
+                            clearInterval(listener.handler);
+                        } else if (listener.type === 'event') {
+                            listener.element.removeEventListener(listener.event, listener.handler);
+                        }
+                    });
+                    this.tempListeners = [];
+                } catch (e) {
+                    handleError(e, "行为模拟器停止");
+                }
+            },
+            
+            scheduleNextAction: function() {
+                if (!this.isRunning) return;
+                
+                var interval = random(config.minInterval, config.maxInterval);
+                this.currentTimer = setTimeout(randomBehavior.perform.bind(randomBehavior), interval);
+            }
+        };
+
+        const randomBehavior = {
+            perform: async function() {
+                try {
+                    const r = Math.random();
+                    let cumulativeProbability = 0;
+                    for (const behavior of behaviorProbabilities) {
+                        cumulativeProbability += behavior.probability;
+                        if (r < cumulativeProbability) {
+                            await randomDelay(config.minInterval / 2, config.maxInterval / 2);
+                            this[behavior.action]();
+                            break;
+                        }
+                    }
+                } catch (e) {
+                    handleError(e, "随机行为执行");
+                }
+            },
+            read: function() {
+                console.log("模拟阅读行为");
+                simulateScrollPause();
+            },
+            click: function() {
+                console.log("模拟点击行为");
+                clickRandomAd();
+            },
+            type: function() {
+                console.log("模拟键盘输入行为");
+                const input = document.querySelector('input, textarea');
+                if (input) simulateTyping(input, "测试输入");
+            },
+            scroll: function() {
+                console.log("模拟滚动行为");
+                simulateScrollPause();
+            }
+        };
+
+        function normalizeBehaviorProbabilities() {
+            const totalProbability = behaviorProbabilities.reduce((sum, behavior) => sum + behavior.probability, 0);
+            if (Math.abs(totalProbability - 1) > 0.001) {
+                console.warn("行为概率总和不为 1，正在进行归一化处理");
+                behaviorProbabilities.forEach(behavior => {
+                    behavior.probability /= totalProbability;
+                });
+            }
+        }
+
+        function simulateMouseMovement(targetElement, useCurve = true) {
+            try {
+                if (!targetElement || !(targetElement instanceof HTMLElement)) {
+                    console.error("目标元素无效");
+                    return;
+                }
+                const rect = targetElement.getBoundingClientRect();
+                const startX = random(0, window.innerWidth);
+                const startY = random(0, window.innerHeight);
+                const endX = rect.left + rect.width / 2;
+                const endY = rect.top + rect.height / 2;
+                const steps = config.mouseMoveSteps;
+
+                let currentStep = 0;
+                const controlX = useCurve ? (startX + endX) / 2 + random(-50, 50) : null;
+                const controlY = useCurve ? (startY + endY) / 2 + random(-50, 50) : null;
+
+                const interval = setInterval(() => {
+                    try {
+                        if (currentStep >= steps) {
+                            clearInterval(interval);
+                            return;
+                        }
+                        const t = currentStep / steps;
+                        const x = useCurve
+                            ? (1 - t) * (1 - t) * startX + 2 * (1 - t) * t * controlX + t * t * endX
+                            : startX + t * (endX - startX);
+                        const y = useCurve
+                            ? (1 - t) * (1 - t) * startY + 2 * (1 - t) * t * controlY + t * t * endY
+                            : startY + t * (endY - startY);
+
+                        const event = new MouseEvent('mousemove', {
+                            clientX: x,
+                            clientY: y,
+                            bubbles: true,
+                            cancelable: true,
+                            view: window
+                        });
+                        document.dispatchEvent(event);
+                        currentStep++;
+                    } catch (e) {
+                        handleError(e, "鼠标移动模拟");
+                        clearInterval(interval);
+                    }
+                }, config.scrollStepInterval);
+            } catch (e) {
+                handleError(e, "模拟鼠标移动函数");
+            }
+        }
+
+        function animateMouseMovement(targetElement) {
+            simulateMouseMovement(targetElement, true);
+        }
+
+        function simulateScrollPause() {
+            const scrollHeight = document.body.scrollHeight;
+            const scrollPosition = window.scrollY + window.innerHeight;
+            if (scrollPosition < scrollHeight) {
+                const scrollAmount = random(50, 150) * (Math.random() > 0.5 ? 1 : -1);
+                window.scrollBy(0, scrollAmount);
+                logger.log("模拟滚动停顿");
+            }
+        }
+
+        function simulateHover(targetElement) {
+            if (!targetElement || !(targetElement instanceof HTMLElement)) {
+                console.error("目标元素无效");
+                return;
+            }
+            const event = new MouseEvent('mouseover', {
+                bubbles: true,
+                cancelable: true,
+                view: window
+            });
+            targetElement.dispatchEvent(event);
+            logger.log("模拟鼠标悬停: " + (targetElement.textContent || targetElement.className || '未知元素'));
+        }
+
+        function simulateTyping(targetElement, text) {
+            if (!targetElement || !(targetElement instanceof HTMLElement)) {
+                console.error("目标元素无效");
+                return;
+            }
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index >= text.length) {
+                    clearInterval(interval);
+                    return;
+                }
+                const char = text[index];
+                const keyEvent = new KeyboardEvent('keydown', {
+                    key: char,
+                    code: `Key${char.toUpperCase()}`,
+                    bubbles: true,
+                    cancelable: true
+                });
+                targetElement.dispatchEvent(keyEvent);
+                targetElement.value += char;
+                index++;
+            }, random(100, 300));
+        }
+
+        function simulateRandomInteraction() {
+            const modals = document.querySelectorAll('.modal, .dialog, [role="dialog"]');
+            if (modals.length > 0 && Math.random() < 0.5) {
+                const modal = modals[Math.floor(Math.random() * modals.length)];
+                const isVisible = modal.style.display !== 'none';
+                modal.style.display = isVisible ? 'none' : 'block';
+                logger.log(`随机${isVisible ? '关闭' : '打开'}模态框`);
+            }
+        }
+
+        function clickRandomAd() {
+            var ads = document.querySelectorAll('.ad, .advertisement, [data-ad]');
+            if (ads.length === 0) {
+                logger.log("未找到广告元素");
+                return;
+            }
+
+            var randomAd = ads[Math.floor(Math.random() * ads.length)];
+            var rect = randomAd.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top + rect.height / 2;
+
+            var clickEvent = new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+                clientX: x,
+                clientY: y
+            });
+
+            logger.log("点击广告: " + (randomAd.textContent || randomAd.className || '广告元素'));
+            randomAd.dispatchEvent(clickEvent);
+        }
+
+        var userActivityDetector = {
+            lastActivityTime: Date.now(),
+            activityThreshold: 30000,
+
+            init: function() {
+                ['mousemove', 'keydown', 'scroll', 'click'].forEach(function(event) {
+                    window.addEventListener(event, function() {
+                        userActivityDetector.lastActivityTime = Date.now();
+                    });
+                });
+            },
+
+            isUserActive: function() {
+                return Date.now() - this.lastActivityTime < this.activityThreshold;
+            }
+        };
+
+        var taskScheduler = {
+            tasks: [],
+            maxTasks: 10,
+            interval: 1000,
+            running: false,
+
+            start: function() {
+                if (this.running) return;
+                this.running = true;
+
+                const executeTasks = () => {
+                    if (!this.running) return;
+
+                    const now = Date.now();
+                    this.tasks.forEach(task => {
+                        if (!task.lastRun || now - task.lastRun >= this.interval) {
+                            task.fn();
+                            task.lastRun = now;
+                        }
+                    });
+
+                    requestAnimationFrame(executeTasks);
+                };
+
+                requestAnimationFrame(executeTasks);
+            },
+
+            stop: function() {
+                this.running = false;
+            },
+
+            addTask: function(taskFn) {
+                if (this.tasks.length >= this.maxTasks) {
+                    console.warn("任务调度器已达到最大任务数量，无法添加新任务");
+                    return;
+                }
+                this.tasks.push({ fn: taskFn, lastRun: null });
+            }
+        };
+
+        taskScheduler.addTask(() => memoryManager.checkAndClean());
+        taskScheduler.addTask(() => behaviorSimulator.scheduleNextAction());
+        taskScheduler.start();
+
+        const behaviorProbabilities = [
+            { action: 'read', probability: 0.6 },
+            { action: 'click', probability: 0.08 },
+            { action: 'type', probability: 0.1 },
+            { action: 'scroll', probability: 0.22 }
+        ];
+
+        normalizeBehaviorProbabilities();
+
+        randomBehavior.perform = async function() {
+            try {
+                const r = Math.random();
+                let cumulativeProbability = 0;
+                for (const behavior of behaviorProbabilities) {
+                    cumulativeProbability += behavior.probability;
+                    if (r < cumulativeProbability) {
+                        await randomDelay(config.minInterval / 2, config.maxInterval / 2);
+                        this[behavior.action]();
+                        break;
+                    }
+                }
+            } catch (e) {
+                handleError(e, "随机行为执行");
+            }
+        };
+
+        function update() {
+            console.log('Update frame');
+            requestAnimationFrame(update);
+        }
+
+        let userInteracted = false;
+        const interactionEvents = ['mousemove', 'keydown', 'scroll', 'click'];
+
+        function stopAllAndHide() {
+            behaviorSimulator.stop();
+            memoryManager.cleanMemory();
+
+            const indicator = document.querySelector('div[style*="z-index: 9999"]');
+            if (indicator) {
+                indicator.style.display = 'none';
+            }
+            console.log = console.info = console.warn = console.error = function() {};
+        }
+
+        interactionEvents.forEach(event => {
+            window.addEventListener(event, function() {
+                if (!userInteracted) {
+                    userInteracted = true;
+                    stopAllAndHide();
+                }
+            });
+        });
+
+        function setupVisibilityChangeHandler() {
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    console.log("页面不可见，暂停行为模拟");
+                    behaviorSimulator.stop();
+                } else if (document.visibilityState === 'visible') {
+                    console.log("页面可见，恢复行为模拟");
+                    behaviorSimulator.start();
+                }
+            });
+        }
+
+        function handleInactivityWhileReading() {
+            const readingCheckInterval = 30000;
+            setInterval(() => {
+                if (!userActivityDetector.isUserActive() && document.visibilityState === 'visible') {
+                    console.log("用户长时间未操作，可能正在阅读内容");
+                    randomBehavior.read();
+                }
+            }, readingCheckInterval);
+        }
+
+        setupVisibilityChangeHandler();
+        handleInactivityWhileReading();
 
         setTimeout(function() {
             if (!userInteracted) {
@@ -373,21 +1086,54 @@
                 }, 2000);
             });
         }
-
-        // 增强内存管理：清理事件监听器和循环任务
+        
         window.addEventListener('beforeunload', function() {
             behaviorSimulator.stop();
             memoryManager.cleanMemory();
-
-            // 停止任务调度器
-            stopTask();
-
-            // 移除所有事件监听器
-            document.removeEventListener('DOMContentLoaded', enhanceStealth);
-            window.removeEventListener('load', behaviorSimulator.start);
-            window.removeEventListener('beforeunload', arguments.callee);
         });
 
+        const simulator = {
+            moveMouse: function(targetElement) {
+            },
+            typeText: function(targetElement, text) {
+            }
+        };
+
         requestAnimationFrame(update);
+
+        // 浏览器和设备测试日志
+        function logTestResults() {
+            try {
+                const browser = browserAdapter.detectBrowser();
+                const platform = browserAdapter.detectPlatform();
+                const isMobile = deviceDetector.isMobile();
+
+                logger.log(`测试结果: 浏览器=${browser}, 平台=${platform}, 是否移动设备=${isMobile}`, 'info');
+
+                logger.log(`navigator.webdriver: ${navigator.webdriver}`, 'info');
+                logger.log(`navigator.languages: ${navigator.languages}`, 'info');
+                logger.log(`navigator.platform: ${navigator.platform}`, 'info');
+                logger.log(`navigator.userAgent: ${navigator.userAgent}`, 'info');
+                logger.log(`navigator.hardwareConcurrency: ${navigator.hardwareConcurrency}`, 'info');
+                logger.log(`navigator.deviceMemory: ${navigator.deviceMemory}`, 'info');
+
+                const testElement = document.createElement('div');
+                testElement.style.cssText = 'position: absolute; top: 0; left: 0; width: 100px; height: 100px; background: blue;';
+                document.body.appendChild(testElement);
+
+                simulateMouseMovement(testElement);
+                simulateScrollPause();
+                simulateHover(testElement);
+
+                document.body.removeChild(testElement);
+                logger.log("伪装和模拟功能测试完成", 'info');
+            } catch (e) {
+                handleError(e, "测试伪装和模拟功能");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            logTestResults();
+        });
     });
 })();
