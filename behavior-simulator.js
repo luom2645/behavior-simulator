@@ -1054,9 +1054,9 @@
         }
 
         function handleInactivityWhileReading() {
-            const readingCheckInterval = 30000;
+            const readingCheckInterval = 5000; // 5秒无操作触发
             setInterval(() => {
-                if (!userActivityDetector.isUserActive() && document.visibilityState === 'visible') {
+                if (!userInteracted && document.visibilityState === 'visible') {
                     console.log("用户长时间未操作，可能正在阅读内容");
                     randomBehavior.read();
                 }
