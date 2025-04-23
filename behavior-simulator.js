@@ -1,4 +1,29 @@
 (function() {
+    // 确保 userActivityDetector 定义在文件顶部
+    const userActivityDetector = {
+        lastActivityTime: Date.now(),
+        activityTimeout: 30000, // 30秒无操作视为非活跃
+
+        init: function() {
+            const activityEvents = ['mousemove', 'keydown', 'scroll', 'click'];
+            activityEvents.forEach(event => {
+                window.addEventListener(event, () => {
+                    this.lastActivityTime = Date.now();
+                });
+            });
+        },
+
+        isUserActive: function() {
+            return Date.now() - this.lastActivityTime < this.activityTimeout;
+        }
+    };
+
+    // 确保 simulateScrollPause 函数定义在文件顶部
+    function simulateScrollPause() {
+        console.log("模拟滚动暂停行为");
+        window.scrollBy(0, random(50, 100));
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         var indicator = document.createElement('div');
         indicator.style.cssText = 'display: none; position: fixed; top: 10px; right: 10px; background: red; padding: 10px; color: white; z-index: 9999;';
@@ -269,31 +294,7 @@
             Object.defineProperty(window, 'outerHeight', { get: () => window.innerHeight });
         }
 
-        // 定义 userActivityDetector
-        const userActivityDetector = {
-            lastActivityTime: Date.now(),
-            activityTimeout: 30000, // 30秒无操作视为非活跃
-
-            init: function() {
-                const activityEvents = ['mousemove', 'keydown', 'scroll', 'click'];
-                activityEvents.forEach(event => {
-                    window.addEventListener(event, () => {
-                        this.lastActivityTime = Date.now();
-                    });
-                });
-            },
-
-            isUserActive: function() {
-                return Date.now() - this.lastActivityTime < this.activityTimeout;
-            }
-        };
-
         // 定义 simulateScrollPause
-        function simulateScrollPause() {
-            console.log("模拟滚动暂停行为");
-            window.scrollBy(0, random(50, 100));
-        }
-
         const randomBehavior = {
             perform: async function() {
                 try {
@@ -826,12 +827,17 @@
 
         interactionEvents.forEach(event => {
             window.addEventListener(event, function() {
-                if (!userInteracted) {
-                    userInteracted = true;
-                    stopAllAndHide();
-                }
+                userInteracted = true;
+                clearTimeout(startScriptTimeout); // 清除启动脚本的计时器
             });
         });
+
+        let startScriptTimeout = setTimeout(function() {
+            if (!userInteracted) {
+                console.log("用户无操作 5 秒，开始运行脚本");
+                behaviorSimulator.start();
+            }
+        }, 5000);
 
         function setupVisibilityChangeHandler() {
             document.addEventListener('visibilitychange', () => {
