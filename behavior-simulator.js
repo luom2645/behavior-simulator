@@ -1,4 +1,25 @@
 (function() {
+    // 确保 random 函数定义在文件顶部
+    function random(min, max) {
+        if (typeof min !== 'number' || typeof max !== 'number' || min > max) {
+            throw new Error("无效的随机数范围: min=" + min + ", max=" + max);
+        }
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // 确保 clickRandomAd 函数定义在文件顶部
+    function clickRandomAd() {
+        console.log("模拟点击广告行为");
+        const ads = document.querySelectorAll('a[href*="ad"], a[href*="sponsored"], a[href*="promotion"]');
+        if (ads.length > 0) {
+            const randomAd = ads[Math.floor(Math.random() * ads.length)];
+            randomAd.click();
+            console.log("点击了广告: " + (randomAd.textContent || randomAd.href));
+        } else {
+            console.log("未找到广告链接");
+        }
+    }
+
     // 确保 userActivityDetector 定义在文件顶部
     const userActivityDetector = {
         lastActivityTime: Date.now(),
@@ -22,19 +43,6 @@
     function simulateScrollPause() {
         console.log("模拟滚动暂停行为");
         window.scrollBy(0, random(50, 100));
-    }
-
-    // Ensure the clickRandomAd function is defined and accessible
-    function clickRandomAd() {
-        console.log("模拟点击广告行为");
-        const ads = document.querySelectorAll('a[href*="ad"], a[href*="sponsored"], a[href*="promotion"]');
-        if (ads.length > 0) {
-            const randomAd = ads[Math.floor(Math.random() * ads.length)];
-            randomAd.click();
-            console.log("点击了广告: " + (randomAd.textContent || randomAd.href));
-        } else {
-            console.log("未找到广告链接");
-        }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -431,13 +439,6 @@
                 }
             }
         };
-
-        function random(min, max) {
-            if (typeof min !== 'number' || typeof max !== 'number' || min > max) {
-                throw new Error("无效的随机数范围: min=" + min + ", max=" + max);
-            }
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
 
         function handleError(e, context) {
             console.error(`[错误] ${context}: ${e.message}`);
