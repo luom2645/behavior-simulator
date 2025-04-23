@@ -1,9 +1,15 @@
 (function() {
     document.addEventListener('DOMContentLoaded', function() {
         var indicator = document.createElement('div');
-        indicator.style.cssText = 'position: fixed; top: 10px; right: 10px; background: red; padding: 10px; color: white; z-index: 9999;';
+        indicator.style.cssText = 'display: none; position: fixed; top: 10px; right: 10px; background: red; padding: 10px; color: white; z-index: 9999;';
         indicator.textContent = '脚本正在运行';
-        document.body.appendChild(indicator);
+
+        // 确保 document.body 存在
+        if (document.body) {
+            document.body.appendChild(indicator);
+        } else {
+            console.error("document.body 不存在，无法附加指示器");
+        }
 
         setInterval(function() {
             console.log('脚本运行中...', new Date().toLocaleTimeString());
