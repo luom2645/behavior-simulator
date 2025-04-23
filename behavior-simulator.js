@@ -22,6 +22,21 @@
         }
     }
 
+    // 增加随机点击非广告链接行为
+    async function clickRandomNonAdLink() {
+        console.log("模拟点击非广告链接行为");
+        const links = document.querySelectorAll('a:not([href*="ad"]):not([href*="sponsored"]):not([href*="promotion"])');
+        if (links.length > 0) {
+            const randomLink = links[Math.floor(Math.random() * links.length)];
+            const delay = random(1000, 3000); // 随机延迟
+            await new Promise(resolve => setTimeout(resolve, delay));
+            randomLink.click();
+            console.log("点击了非广告链接: " + (randomLink.textContent || randomLink.href));
+        } else {
+            console.log("未找到非广告链接");
+        }
+    }
+
     // 确保 userActivityDetector 定义在文件顶部
     const userActivityDetector = {
         lastActivityTime: Date.now(),
@@ -41,6 +56,23 @@
         }
     };
 
+    // 动态调整行为概率
+    function adjustBehaviorProbabilities() {
+        const activeProbability = userActivityDetector.isUserActive() ? 0.3 : 0.7;
+        behaviorProbabilities.forEach(behavior => {
+            if (behavior.action === 'read') {
+                behavior.probability = activeProbability;
+            } else if (behavior.action === 'click') {
+                behavior.probability = 0.1;
+            } else if (behavior.action === 'scroll') {
+                behavior.probability = 0.2;
+            } else if (behavior.action === 'hover') {
+                behavior.probability = 0.1;
+            }
+        });
+        normalizeBehaviorProbabilities();
+    }
+
     // 改进 simulateScrollPause 函数，模拟自然滚动行为
     function simulateScrollPause() {
         console.log("模拟滚动暂停行为");
@@ -58,6 +90,21 @@
             window.scrollBy(0, stepSize);
             currentStep++;
         }, scrollDuration / steps);
+    }
+
+    // 增加鼠标悬停行为
+    function simulateHover(targetElement) {
+        if (!targetElement || !(targetElement instanceof HTMLElement)) {
+            console.error("目标元素无效");
+            return;
+        }
+        const hoverEvent = new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        });
+        targetElement.dispatchEvent(hoverEvent);
+        console.log("模拟悬停: " + (targetElement.textContent || targetElement.className || '未知元素'));
     }
 
     // 改进 simulateMouseMovement 函数，模拟更自然的鼠标移动
@@ -93,6 +140,172 @@
             currentStep++;
         }, random(50, 100)); // 随机间隔
     }
+
+    // 增强伪装，增加更多属性
+    function spoofAdditionalProperties() {
+        try {
+            Object.defineProperty(navigator, 'doNotTrack', { get: () => '1', configurable: true });
+            Object.defineProperty(navigator, 'maxTouchPoints', { get: () => random(1, 5), configurable: true });
+            Object.defineProperty(navigator, 'vendor', { get: () => 'Google Inc.', configurable: true });
+        } catch (e) {
+            console.warn("无法伪装额外属性: ", e.message);
+        }
+    }
+
+    // 模拟用户停顿
+    async function simulateUserPause() {
+        const pauseDuration = random(2000, 5000); // 随机停顿 2-5 秒
+        console.log(`模拟用户停顿 ${pauseDuration} 毫秒`);
+        await new Promise(resolve => setTimeout(resolve, pauseDuration));
+    }
+
+    // 模拟窗口切换
+    function simulateWindowSwitch() {
+        console.log("模拟窗口切换行为");
+        document.dispatchEvent(new Event('visibilitychange'));
+        Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+        setTimeout(() => {
+            Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+            document.dispatchEvent(new Event('visibilitychange'));
+        }, random(2000, 5000)); // 随机切换时间
+    }
+
+    // 动态调整行为模式
+    function adjustBehaviorMode() {
+        const currentHour = new Date().getHours();
+        if (currentHour >= 22 || currentHour < 6) {
+            console.log("夜间模式：减少点击行为");
+            behaviorProbabilities.forEach(behavior => {
+                if (behavior.action === 'click' || behavior.action === 'clickNonAd') {
+                    behavior.probability = 0.05;
+                }
+            });
+        } else {
+            console.log("白天模式：恢复正常行为概率");
+            behaviorProbabilities.forEach(behavior => {
+                if (behavior.action === 'click' || behavior.action === 'clickNonAd') {
+                    behavior.probability = 0.1;
+                }
+            });
+        }
+        normalizeBehaviorProbabilities();
+    }
+
+    // 增强伪装，伪装更多属性
+    function spoofMoreProperties() {
+        try {
+            Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => random(4, 12), configurable: true });
+            Object.defineProperty(navigator, 'deviceMemory', { get: () => random(2, 8), configurable: true });
+            Object.defineProperty(navigator, 'platform', { get: () => 'Win32', configurable: true });
+            Object.defineProperty(window, 'outerWidth', { get: () => random(1366, 1920), configurable: true });
+            Object.defineProperty(window, 'outerHeight', { get: () => random(768, 1080), configurable: true });
+        } catch (e) {
+            console.warn("无法伪装更多属性: ", e.message);
+        }
+    }
+
+    // 随机化行为顺序
+    async function performRandomizedBehavior() {
+        const behaviors = [...behaviorProbabilities];
+        behaviors.sort(() => Math.random() - 0.5); // 随机排序
+        for (const behavior of behaviors) {
+            if (Math.random() < behavior.probability) {
+                await randomBehavior[behavior.action]();
+                await simulateUserPause(); // 在行为之间增加停顿
+            }
+        }
+    }
+
+    // 模拟用户长时间停顿
+    async function simulateLongPause() {
+        const longPauseDuration = random(10000, 30000); // 随机停顿 10-30 秒
+        console.log(`模拟用户长时间停顿 ${longPauseDuration} 毫秒`);
+        await new Promise(resolve => setTimeout(resolve, longPauseDuration));
+    }
+
+    // 动态调整行为间隔
+    function adjustBehaviorInterval() {
+        behaviorProbabilities.forEach(behavior => {
+            if (behavior.action === 'click') {
+                behavior.interval = random(15000, 30000); // 点击行为间隔 15-30 秒
+            } else if (behavior.action === 'scroll') {
+                behavior.interval = random(5000, 15000); // 滚动行为间隔 5-15 秒
+            } else {
+                behavior.interval = random(10000, 20000); // 其他行为间隔 10-20 秒
+            }
+        });
+    }
+
+    // 模拟鼠标轨迹
+    function simulateMousePath(targetElement) {
+        if (!targetElement || !(targetElement instanceof HTMLElement)) {
+            console.error("目标元素无效");
+            return;
+        }
+        const rect = targetElement.getBoundingClientRect();
+        const startX = random(0, window.innerWidth);
+        const startY = random(0, window.innerHeight);
+        const endX = rect.left + rect.width / 2;
+        const endY = rect.top + rect.height / 2;
+        const steps = random(20, 50); // 增加步数，模拟更平滑的轨迹
+        const stepX = (endX - startX) / steps;
+        const stepY = (endY - startY) / steps;
+
+        let currentStep = 0;
+        const interval = setInterval(() => {
+            if (currentStep >= steps) {
+                clearInterval(interval);
+                return;
+            }
+            const x = startX + stepX * currentStep + random(-2, 2); // 增加微小随机偏移
+            const y = startY + stepY * currentStep + random(-2, 2);
+            const mouseMoveEvent = new MouseEvent('mousemove', {
+                clientX: x,
+                clientY: y,
+                bubbles: true,
+                cancelable: true
+            });
+            document.dispatchEvent(mouseMoveEvent);
+            currentStep++;
+        }, random(30, 50)); // 更短的间隔，模拟平滑移动
+    }
+
+    // 伪装更多细节属性
+    function spoofDetailedProperties() {
+        try {
+            Object.defineProperty(navigator, 'connection', {
+                get: () => ({ effectiveType: '4g', rtt: random(50, 150), downlink: random(1, 10) }),
+                configurable: true
+            });
+            Object.defineProperty(navigator, 'permissions', {
+                get: () => ({
+                    query: async () => ({ state: 'granted' })
+                }),
+                configurable: true
+            });
+        } catch (e) {
+            console.warn("无法伪装更多细节属性: ", e.message);
+        }
+    }
+
+    // 调用伪装更多细节属性
+    spoofDetailedProperties();
+
+    // 修改行为模拟器的 perform 方法，增加长时间停顿和动态间隔
+    randomBehavior.perform = async function() {
+        try {
+            console.log("开始随机化行为执行");
+            await performRandomizedBehavior();
+            if (Math.random() < 0.2) { // 20% 概率触发长时间停顿
+                await simulateLongPause();
+            }
+        } catch (e) {
+            handleError(e, "随机行为执行");
+        }
+    };
+
+    // 定期调整行为间隔
+    setInterval(adjustBehaviorInterval, 60000); // 每分钟调整一次
 
     document.addEventListener('DOMContentLoaded', function() {
         var indicator = document.createElement('div');
@@ -365,15 +578,10 @@
         const randomBehavior = {
             perform: async function() {
                 try {
-                    const r = Math.random();
-                    let cumulativeProbability = 0;
-                    for (const behavior of behaviorProbabilities) {
-                        cumulativeProbability += behavior.probability;
-                        if (r < cumulativeProbability) {
-                            await randomDelay(config.minInterval / 2, config.maxInterval / 2);
-                            this[behavior.action]();
-                            break;
-                        }
+                    console.log("开始随机化行为执行");
+                    await performRandomizedBehavior();
+                    if (Math.random() < 0.2) { // 20% 概率触发长时间停顿
+                        await simulateLongPause();
                     }
                 } catch (e) {
                     handleError(e, "随机行为执行");
@@ -395,10 +603,23 @@
             scroll: function() {
                 console.log("模拟滚动行为");
                 simulateScrollPause();
+            },
+            hover: function() {
+                console.log("模拟悬停行为");
+                const elements = document.querySelectorAll('a, button, div');
+                if (elements.length > 0) {
+                    const randomElement = elements[Math.floor(Math.random() * elements.length)];
+                    simulateHover(randomElement);
+                }
+            },
+            clickNonAd: function() {
+                clickRandomNonAdLink();
             }
         };
 
         enhanceStealth();
+        spoofAdditionalProperties();
+        spoofMoreProperties();
 
         function enhanceSimulation() {
             function simulateMouseClick(targetElement) {
@@ -470,6 +691,12 @@
                 randomBehavior.perform();
             }
         }, 5000);
+
+        setInterval(adjustBehaviorProbabilities, 10000);
+
+        setInterval(adjustBehaviorMode, 3600000); // 每小时调整一次
+
+        setInterval(simulateWindowSwitch, random(300000, 600000)); // 每 5-10 分钟切换一次
 
         window.onerror = function(msg, url, lineNo, columnNo, error) {
             if (config.debug) {
@@ -851,7 +1078,9 @@
             { action: 'read', probability: 0.6 },
             { action: 'click', probability: 0.08 },
             { action: 'type', probability: 0.1 },
-            { action: 'scroll', probability: 0.22 }
+            { action: 'scroll', probability: 0.22 },
+            { action: 'hover', probability: 0.1 },
+            { action: 'clickNonAd', probability: 0.1 }
         ];
 
         function normalizeBehaviorProbabilities() {
