@@ -269,6 +269,31 @@
             Object.defineProperty(window, 'outerHeight', { get: () => window.innerHeight });
         }
 
+        // 定义 userActivityDetector
+        const userActivityDetector = {
+            lastActivityTime: Date.now(),
+            activityTimeout: 30000, // 30秒无操作视为非活跃
+
+            init: function() {
+                const activityEvents = ['mousemove', 'keydown', 'scroll', 'click'];
+                activityEvents.forEach(event => {
+                    window.addEventListener(event, () => {
+                        this.lastActivityTime = Date.now();
+                    });
+                });
+            },
+
+            isUserActive: function() {
+                return Date.now() - this.lastActivityTime < this.activityTimeout;
+            }
+        };
+
+        // 定义 simulateScrollPause
+        function simulateScrollPause() {
+            console.log("模拟滚动暂停行为");
+            window.scrollBy(0, random(50, 100));
+        }
+
         const randomBehavior = {
             perform: async function() {
                 try {
