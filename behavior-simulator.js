@@ -71,19 +71,27 @@
         // 修改 spoofHardwareProperties 函数
         function spoofHardwareProperties() {
             try {
-                Object.defineProperty(navigator, 'hardwareConcurrency', {
-                    get: () => random(2, 8),
-                    configurable: true // 确保属性可重新定义
-                });
+                if (Object.getOwnPropertyDescriptor(navigator, 'hardwareConcurrency')?.configurable) {
+                    Object.defineProperty(navigator, 'hardwareConcurrency', {
+                        get: () => random(2, 8),
+                        configurable: true // 确保属性可重新定义
+                    });
+                } else {
+                    console.warn("navigator.hardwareConcurrency 属性不可配置，跳过伪装");
+                }
             } catch (e) {
                 console.warn("无法伪装 navigator.hardwareConcurrency: ", e.message);
             }
 
             try {
-                Object.defineProperty(navigator, 'deviceMemory', {
-                    get: () => random(4, 16),
-                    configurable: true
-                });
+                if (Object.getOwnPropertyDescriptor(navigator, 'deviceMemory')?.configurable) {
+                    Object.defineProperty(navigator, 'deviceMemory', {
+                        get: () => random(4, 16),
+                        configurable: true
+                    });
+                } else {
+                    console.warn("navigator.deviceMemory 属性不可配置，跳过伪装");
+                }
             } catch (e) {
                 console.warn("无法伪装 navigator.deviceMemory: ", e.message);
             }
