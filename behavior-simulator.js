@@ -928,7 +928,7 @@
 
         var userActivityDetector = {
             lastActivityTime: Date.now(),
-            activityThreshold: 30000,
+            activityThreshold: 5000,
 
             init: function() {
                 ['mousemove', 'keydown', 'scroll', 'click'].forEach(function(event) {
